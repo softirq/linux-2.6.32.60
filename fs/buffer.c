@@ -1736,6 +1736,7 @@ static int __block_write_full_page(struct inode *inode, struct page *page,
 	do {
 		struct buffer_head *next = bh->b_this_page;
 		if (buffer_async_write(bh)) {
+            /*提交请求*/
 			submit_bh(write_op, bh);
 			nr_underway++;
 		}

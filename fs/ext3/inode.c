@@ -1181,6 +1181,7 @@ static int ext3_write_begin(struct file *file, struct address_space *mapping,
 	to = from + len;
 
 retry:
+    /*从mapping的radix tree中获取页缓存*/
 	page = grab_cache_page_write_begin(mapping, index, flags);
 	if (!page)
 		return -ENOMEM;
@@ -1193,6 +1194,7 @@ retry:
 		ret = PTR_ERR(handle);
 		goto out;
 	}
+    /*为page准备buffer_head结构,用于描述这个page数据块*/
 	ret = block_write_begin(file, mapping, pos, len, flags, pagep, fsdata,
 							ext3_get_block);
 	if (ret)

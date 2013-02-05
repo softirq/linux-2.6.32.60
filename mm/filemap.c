@@ -2254,6 +2254,7 @@ again:
 			break;
 		}
 
+        /*为该页分配页缓存 对应ext3的ext3_write_begin*/
 		status = a_ops->write_begin(file, mapping, pos, bytes, flags,
 						&page, &fsdata);
 		if (unlikely(status))
@@ -2268,6 +2269,7 @@ again:
 		flush_dcache_page(page);
 
 		mark_page_accessed(page);
+        /*将该页的buffer_head标记为dirty 对应ext3的ext3_ordered_write_end*/
 		status = a_ops->write_end(file, mapping, pos, bytes, copied,
 						page, fsdata);
 		if (unlikely(status < 0))
@@ -2311,6 +2313,7 @@ generic_file_buffered_write(struct kiocb *iocb, const struct iovec *iov,
 	struct iov_iter i;
 
 	iov_iter_init(&i, iov, nr_segs, count, written);
+    /* 将数据写入设备缓存 */
 	status = generic_perform_write(file, &i, pos);
 
 	if (likely(status >= 0)) {
@@ -2441,6 +2444,7 @@ ssize_t __generic_file_aio_write(struct kiocb *iocb, const struct iovec *iov,
 			 */
 		}
 	} else {
+        /* write with cache */
 		written = generic_file_buffered_write(iocb, iov, nr_segs,
 				pos, ppos, count, written);
 	}
