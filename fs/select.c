@@ -737,6 +737,7 @@ static inline unsigned int do_pollfd(struct pollfd *pollfd, poll_table *pwait)
 	return mask;
 }
 
+/*与select相比，采用了链表的方式，所以没有select定长数组的限制，同时避免了检验不需要需要的文件 不过效率跟select一样都是O(n) */
 static int do_poll(unsigned int nfds,  struct poll_list *list,
 		   struct poll_wqueues *wait, struct timespec *end_time)
 {
@@ -831,6 +832,7 @@ int do_sys_poll(struct pollfd __user *ufds, unsigned int nfds,
 		if (!len)
 			break;
 
+        /*将所有的pollfd从用户空间复制到内核空间的poll_list列表中 链表中的每个节点包含多个pollfd*/
 		if (copy_from_user(walk->entries, ufds + nfds-todo,
 					sizeof(struct pollfd) * walk->len))
 			goto out_fds;
@@ -849,6 +851,7 @@ int do_sys_poll(struct pollfd __user *ufds, unsigned int nfds,
 	}
 
 	poll_initwait(&table);
+    /* 调用do_poll遍历链表 */
 	fdcount = do_poll(nfds, head, &table, end_time);
 	poll_freewait(&table);
 

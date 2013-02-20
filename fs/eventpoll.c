@@ -1315,6 +1315,7 @@ retry:
 		 */
 		init_waitqueue_entry(&wait, current);
 		wait.flags |= WQ_FLAG_EXCLUSIVE;
+        /*休眠 等待被ep_poll_callback函数唤醒*/
 		__add_wait_queue(&ep->wq, &wait);
 
 		for (;;) {
