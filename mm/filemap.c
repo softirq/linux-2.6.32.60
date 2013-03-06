@@ -1010,8 +1010,10 @@ static void do_generic_file_read(struct file *filp, loff_t *ppos,
 
 		cond_resched();
 find_page:
+        /*从高速缓存中查找页*/
 		page = find_get_page(mapping, index);
 		if (!page) {
+            /* 预读 */
 			page_cache_sync_readahead(mapping,
 					ra, filp,
 					index, last_index - index);
@@ -1019,16 +1021,18 @@ find_page:
 			if (unlikely(page == NULL))
 				goto no_cached_page;
 		}
+        /* 在高速缓存中 */
 		if (PageReadahead(page)) {
 			page_cache_async_readahead(mapping,
 					ra, filp, page,
 					index, last_index - index);
 		}
 		if (!PageUptodate(page)) {
+            /* 数据不是最新的 无效 */
 			if (inode->i_blkbits == PAGE_CACHE_SHIFT ||
 					!mapping->a_ops->is_partially_uptodate)
 				goto page_not_up_to_date;
-			if (!trylock_page(page))
+			if (!trylock_page(page))    /* 该页面被其他进程 lock */
 				goto page_not_up_to_date;
 			/* Did it get truncated before we got the lock? */
 			if (!page->mapping)
@@ -1091,6 +1095,7 @@ page_ok:
 		 * "pos" here (the actor routine has to update the user buffer
 		 * pointers and the remaining count).
 		 */
+        /* copy to user */
 		ret = actor(desc, page, offset, nr);
 		offset += ret;
 		index += offset >> PAGE_CACHE_SHIFT;
@@ -1130,6 +1135,7 @@ readpage:
 		 */
 		ClearPageError(page);
 		/* Start the actual read. The read will unlock the page. */
+        /* 从磁盘读文件  ext3为 ext3_readpage*/
 		error = mapping->a_ops->readpage(filp, page);
 
 		if (unlikely(error)) {

@@ -132,6 +132,7 @@ struct disk_part_tbl {
 	struct hd_struct *part[];
 };
 
+/* 磁盘描述符 */
 struct gendisk {
 	/* major, first_minor and minors are input parameters only,
 	 * don't use directly.  Use disk_devt() and disk_max_parts().
@@ -148,6 +149,8 @@ struct gendisk {
 	 * non-critical accesses use RCU.  Always access through
 	 * helpers.
 	 */
+
+    /*分区*/
 	struct disk_part_tbl *part_tbl;
 	struct hd_struct part0;
 
