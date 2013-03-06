@@ -1,0 +1,25 @@
+global reads,writes 
+
+probe kernel.function("vfs_read"), kernel.function("vfs_write")
+{
+    if(probefunc() == "vfs_read")
+        reads[execname()]++
+    else
+        writes[execname()]++
+}
+
+probe timer.s(5)
+{
+    exit()
+}
+
+probe end
+{
+    foreach (count in reads)
+        printf("%s %d\n",count,reads[count])
+    foreach (count in writes)
+        printf("%s %d\n",count,writes[count])
+
+    delete reads
+    delete writes
+}
