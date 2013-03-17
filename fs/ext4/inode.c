@@ -2713,7 +2713,8 @@ out:
  *   - shrink_page_list via pdflush (no journal handle)
  *   - grab_page_cache when doing write_begin (have journal handle)
  *
- * We don't do any block allocation in this function. If we have page with
+ * BLOCK DELAY ALLOCATION : We don't do any block allocation in this function. 
+ * If we have page with
  * multiple blocks we need to write those buffer_heads that are mapped. This
  * is important for mmaped based write. So if we do with blocksize 1K
  * truncate(f, 1024);

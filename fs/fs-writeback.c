@@ -620,8 +620,11 @@ static void writeback_inodes_wb(struct bdi_writeback *wb,
 	spin_lock(&inode_lock);
 
 	if (!wbc->for_kupdate || list_empty(&wb->b_io))
+        /* if the inode have more dirty page, move the  more_io list the b_io list and continue writeback*/
+        /* but in 18 kernel , the inode move to the b_dirty list, and return */
 		queue_io(wb, wbc->older_than_this);
 
+    /* continue to writeback  until the b_io list is empty, which is safe, but the iops is bigger which could effect the user application. */
 	while (!list_empty(&wb->b_io)) {
 		struct inode *inode = list_entry(wb->b_io.prev,
 						struct inode, i_list);

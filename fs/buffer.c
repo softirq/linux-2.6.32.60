@@ -1703,6 +1703,7 @@ static int __block_write_full_page(struct inode *inode, struct page *page,
 		block++;
 	} while (bh != head);
 
+    /* marked all dirty buffer head */
 	do {
 		if (!buffer_mapped(bh))
 			continue;
@@ -1736,6 +1737,7 @@ static int __block_write_full_page(struct inode *inode, struct page *page,
 	do {
 		struct buffer_head *next = bh->b_this_page;
 		if (buffer_async_write(bh)) {
+            /* get all the bhs which marked the BH_Aysnc_Write to the under block layer and then submit the request*/
             /*提交请求*/
 			submit_bh(write_op, bh);
 			nr_underway++;
@@ -2909,6 +2911,7 @@ EXPORT_SYMBOL(block_write_full_page_endio);
 
 /*
  * The generic ->writepage function for buffer-backed address_spaces
+ * write the dirty buffer_head not whole page
  */
 int block_write_full_page(struct page *page, get_block_t *get_block,
 			struct writeback_control *wbc)
