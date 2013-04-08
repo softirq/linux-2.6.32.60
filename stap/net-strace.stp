@@ -1,0 +1,6 @@
+#!/usr/bin/env stap
+
+probe kernel.function("netif_receive_skb").call
+{
+    print_backtrace()
+}

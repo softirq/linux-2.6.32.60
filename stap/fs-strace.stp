@@ -1,0 +1,28 @@
+#!/usr/bin/env stap
+
+probe kernel.function("*@fs/inode.c").return 
+{
+    if(execname() == "dd")
+    {
+        printf("execname = %s.\n", execname());
+        print_backtrace()
+    }
+}
+
+probe kernel.function("*@fs/file.c").return 
+{
+    if(execname() == "dd")
+    {
+        printf("execname = %s.\n", execname());
+        print_backtrace()
+    }
+}
+
+probe kernel.function("*@fs/read_write.c").return 
+{
+    if(execname() == "dd")
+    {
+        printf("execname = %s.\n", execname());
+        print_backtrace()
+    }
+}

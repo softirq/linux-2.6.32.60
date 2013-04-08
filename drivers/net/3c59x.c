@@ -2224,9 +2224,11 @@ vortex_interrupt(int irq, void *dev_id)
 		if (vortex_debug > 5)
 				pr_debug("%s: In interrupt loop, status %4.4x.\n",
 					   dev->name, status);
+        /* receive数据 并raise_softirq NET_RX_SOFTIRQ 来接收包*/
 		if (status & RxComplete)
 			vortex_rx(dev);
 
+        /* send数据 并raise_softirq NET_TX_SOFTIRQ 来发送包*/
 		if (status & TxAvailable) {
 			if (vortex_debug > 5)
 				pr_debug("	TX room bit was handled.\n");

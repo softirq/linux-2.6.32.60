@@ -1,0 +1,39 @@
+#!/usr/bin/env stap
+
+global net_abc
+probe begin
+{
+    printf("%7s %12s %20s %7s %5s\n", "PID","CMD","FUNC","TYPE", "COUNT")
+}
+
+probe socket.create
+{
+    printf("%6s %16s %6s %6s %16s\n", "UID","CMD","PID","PORT", "IP_SOURCE")
+    printf("%6d %16s %6d %6d %16s\n", uid(), execname(), pid(),0,"create")
+}
+
+probe socket.create.return
+{
+    printf("%6s %16s %6s %6s %16s\n", "UID","CMD","PID","PORT", "IP_SOURCE")
+    printf("%6d %16s %6d %6d %16s\n", uid(), execname(), pid(),0,"close")
+}
+
+probe kernel.function("*@net/socket.c").call
+{
+    if(pid() == target())
+        net_abc[pid(), execname(), probefunc(), "call"] <<< 1 
+}
+
+probe kernel.function("*@net/socket.c").return
+{
+    if(pid() == target())
+        net_abc[pid(), execname(), probefunc(), "return"] <<< 1 
+}
+
+probe timer.s(4)
+{
+    foreach([pid, exec, pfunc, type] in net_abc)
+        printf("%7d %12s %20s %7s %5d\n", pid, exec, pfunc, type, @count(net_abc[pid, exec, pfunc, type]));
+
+    delete net_abc
+}

@@ -1,0 +1,26 @@
+#!/usr/bin/env stap
+
+global io_stat
+
+probe vfs.read.return
+{
+    if(dev == MKDEV($1, $2) && ino == $3) 
+    {
+        io_stat[dev,ino, execname(), probefunc()] <<< bytes_to_read 
+    }
+}
+
+probe vfs.write.return
+{
+    if(dev == MKDEV($1, $2) && ino == $3) 
+    {
+        io_stat[dev,ino, execname(), probefunc()] <<< bytes_to_write 
+    }
+}
+
+probe timer.s(2)
+{
+    foreach([dev,inode, exec, pf] in io_stat)
+        printf("0x%x(%d) %s %s bytes %d\n", dev, inode, exec, pf, @sum(io_stat[dev, inode, exec, pf]))
+    delete io_stat
+}

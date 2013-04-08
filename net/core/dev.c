@@ -1880,6 +1880,8 @@ static inline int __dev_xmit_skb(struct sk_buff *skb, struct Qdisc *q,
  *      the BH enable code must have IRQs enabled so that it will not deadlock.
  *          --BLG
  */
+
+/* 设备驱动的传输接口，从设备的出口队列是获取一个帧，然后传给 hard_start_xmit 方法 */
 int dev_queue_xmit(struct sk_buff *skb)
 {
 	struct net_device *dev = skb->dev;
@@ -2361,6 +2363,7 @@ int netif_receive_skb(struct sk_buff *skb)
 ncls:
 #endif
 
+    /* 如果是网桥接口 */
 	skb = handle_bridge(skb, &pt_prev, &ret, orig_dev);
 	if (!skb)
 		goto out;
@@ -2719,6 +2722,7 @@ int napi_gro_frags(struct napi_struct *napi)
 }
 EXPORT_SYMBOL(napi_gro_frags);
 
+/* napi设备的poll默认处理函数 */
 static int process_backlog(struct napi_struct *napi, int quota)
 {
 	int work = 0;
@@ -2790,6 +2794,8 @@ void napi_complete(struct napi_struct *n)
 }
 EXPORT_SYMBOL(napi_complete);
 
+/* 由每个驱动调用netif_napi_add来注册poll函数 ,
+ * 以便在netif_rx调用的网卡软中断 net_rx_action中调用.poll回调函数*/
 void netif_napi_add(struct net_device *dev, struct napi_struct *napi,
 		    int (*poll)(struct napi_struct *, int), int weight)
 {

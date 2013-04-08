@@ -1,0 +1,61 @@
+#!/usr/bin/env stap
+
+global ifxmit, ifrecv
+global ifmerged
+
+probe socket.send
+{
+    if(pid() == target())
+    {
+        if($return > 0)
+        {
+            ifxmit[target(), execname()] <<< size 
+        }
+    }
+}
+
+probe socket.receive
+{
+    if(pid() == target())
+    {
+        if($return > 0)
+        {
+            ifrecv[target(), execname()] <<< size 
+        }
+    }
+}
+
+function data_merge()
+{
+    foreach([pid, exec] in ifxmit)
+        ifmerged[pid, exec] += @count(ifxmit[pid, exec])
+
+    foreach([pid, exec] in ifrecv)
+        ifmerged[pid, exec] += @count(ifrecv[pid, exec])
+
+    foreach([pid, exec] in ifmerged+)
+        n_xmit = @count(ifxmit[pid, exec])
+        n_recv = @count(ifrecv[pid, exec])
+        printf("%5d %7s %7d %7d\n", pid, exec, n_xmit?@sum(ifxmit[pid, exec]):0, n_recv?@sum(ifrecv[pid, exec]):0);
+
+    delete ifxmit
+    delete ifrecv
+    delete ifmerged
+}
+
+probe timer.ms(2000)
+{
+    data_merge()
+}
+
+probe begin 
+{
+    printf("%5s %7s %7s %7s\n",
+            "PID", "COMMAND","XMIT_KB", "RECV_KB")
+}
+
+probe end 
+{
+    printf("process pid : %d socket monitor. end\n", target());
+}
+

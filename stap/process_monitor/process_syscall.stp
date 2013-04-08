@@ -1,0 +1,39 @@
+#!/bin/env stap
+
+global groups
+
+probe syscallgroup.io = syscall.open, syscall.close, syscall.read, syscall.write
+{
+    groupname = "io"
+}
+
+probe syscallgroup.process = syscall.fork, syscall.execve
+{
+    groupname = "process"
+}
+
+probe syscallgroup.*
+{
+    if(pid() == target())
+    {
+        groups[execname()."/".groupname]++
+    }
+}
+
+probe timer.ms(2000)
+{
+    foreach(eg in groups+)
+        printf("%8s %12d.\n", eg, groups[eg])
+}
+
+probe begin
+{
+    printf("%8s %12s\n",
+        "PROCESS","COUNTER")
+}
+
+probe end
+{
+    printf("process syscall end.\n");
+    delete groups
+}

@@ -1,0 +1,78 @@
+#!/usr/bin/env stap
+
+global start
+global time 
+global fileread, filewrite, filehandles
+global time_io
+
+function proc:string()
+{
+    return sprintf("%d(%s)", pid(), execname())
+}
+
+probe begin
+{
+    start = gettimeofday_us()
+    printf("%16s %12s %80s %8s %8s\n", "TIMESTAPM","PROC","FILEHANDLER","READ","WRITE")
+}
+
+function timestamp:long()
+{
+    return gettimeofday_us() - start
+}
+
+probe syscall.open.return
+{
+    filename = user_string($filename)
+    if($return != -1)
+    {
+        filehandles[pid(), $return] = filename 
+    }
+    else
+        printf("%16d %12s access %16s failed.\n", timestamp(),proc(), filename)
+}
+
+probe syscall.read.return
+{
+    fd = $fd
+    bytes = $return
+
+    time = gettimeofday_us() - @entry(gettimeofday_us())
+
+    if(bytes > 0)
+        fileread[pid(), fd] += bytes
+
+    time_io[pid(), fd] <<< time
+}
+
+probe syscall.write.return
+{
+    fd = $fd
+    bytes = $return
+
+    time = gettimeofday_us() - @entry(gettimeofday_us())
+
+    if(bytes > 0)
+        filewrite[pid(), fd] += bytes;
+
+    time_io[pid(), fd] <<< time
+}
+
+probe syscall.close
+{
+    if([pid(),$fd] in filehandles)
+    {
+        if(@count(time_io[pid(), $fd]))
+        {
+            printf("%16d %12s %80s %8d %8d  TIME:%-8d\n", timestamp(), proc(), filehandles[pid(), $fd], fileread[pid(), $fd], filewrite[pid(), $fd], @sum(time_io[pid(), $fd]));
+        }
+        else
+        {
+            printf("%16d %12s %80s %8d %8d \n", timestamp(), proc(), filehandles[pid(), $fd], fileread[pid(), $fd], filewrite[pid(), $fd]);
+        }
+    }
+
+    delete fileread[pid(), $fd]
+        delete filewrite[pid(), $fd]
+        delete filehandles[pid(), $fd]
+}
