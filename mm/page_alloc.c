@@ -1086,6 +1086,7 @@ static void free_hot_cold_page(struct page *page, int cold)
 	int migratetype;
 	int wasMlocked = __TestClearPageMlocked(page);
 
+    /* kmemcheck */
 	kmemcheck_free_shadow(page, 0);
 
 	if (PageAnon(page))
@@ -1523,6 +1524,7 @@ get_page_from_freelist(gfp_t gfp_mask, nodemask_t *nodemask, unsigned int order,
 	int classzone_idx;
 	struct zone *zone;
 	nodemask_t *allowednodes = NULL;/* zonelist_cache approximation */
+    /* zlc : zone list cache */
 	int zlc_active = 0;		/* set if using zonelist_cache */
 	int did_zlc_setup = 0;		/* just call zlc_setup() one time */
 
@@ -2021,9 +2023,9 @@ void __free_pages(struct page *page, unsigned int order)
 	if (put_page_testzero(page)) {
 		trace_mm_page_free_direct(page, order);
 		if (order == 0)
-			free_hot_page(page);
+			free_hot_page(page); /* per cpu page cache */
 		else
-			__free_pages_ok(page, order);
+			__free_pages_ok(page, order); /* buddy list */
 	}
 }
 

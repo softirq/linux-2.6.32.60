@@ -194,6 +194,7 @@ struct per_cpu_pageset {
 
 #endif /* !__GENERATING_BOUNDS.H */
 
+/* all zone type */
 enum zone_type {
 #ifdef CONFIG_ZONE_DMA
 	/*
@@ -218,9 +219,9 @@ enum zone_type {
 #endif
 #ifdef CONFIG_ZONE_DMA32
 	/*
-	 * x86_64 needs two ZONE_DMAs because it supports devices that are
+	 * x86_64 needs both two ZONE_DMAs because it supports devices that are
 	 * only able to do DMA to the lower 16M but also 32 bit devices that
-	 * can only do DMA areas below 4G.
+	 * can only do DMA areas below 4G. in 64 bit 0-4G
 	 */
 	ZONE_DMA32,
 #endif
