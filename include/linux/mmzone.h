@@ -128,10 +128,15 @@ enum zone_stat_item {
 #define LRU_FILE 2
 
 enum lru_list {
+    /* 匿名不活动页 */
 	LRU_INACTIVE_ANON = LRU_BASE,
+    /* 匿名活动页 */
 	LRU_ACTIVE_ANON = LRU_BASE + LRU_ACTIVE,
+    /* 文件不活动页 */
 	LRU_INACTIVE_FILE = LRU_BASE + LRU_FILE,
+    /* 文件活动页 */
 	LRU_ACTIVE_FILE = LRU_BASE + LRU_FILE + LRU_ACTIVE,
+    /* 不可交换页 */
 	LRU_UNEVICTABLE,
 	NR_LRU_LISTS
 };
@@ -295,6 +300,7 @@ struct zone {
 	 * when reading the number of free pages to avoid per-cpu counter
 	 * drift allowing watermarks to be breached
 	 */
+    /* 当可用页在本水线以下时，在读取可用页计数值时，需要增加额外的工作以避免每个CPU的计数器漂移导致水线值被打破 */
 	unsigned long percpu_drift_mark;
 
 	/*
@@ -305,6 +311,7 @@ struct zone {
 	 * on the higher zones). This array is recalculated at runtime if the
 	 * sysctl_lowmem_reserve_ratio sysctl changes.
 	 */
+    /* 我们需要保留一部分低端内存以供驱动使用, 尽管高端内存可能有大量的RAM */
 	unsigned long		lowmem_reserve[MAX_NR_ZONES];
 
 #ifdef CONFIG_NUMA
@@ -312,8 +319,11 @@ struct zone {
 	/*
 	 * zone reclaim becomes active if more unmapped pages exist.
 	 */
+    /* 未映射的页(可回收的页) 超过该值，进行页面回收 */
 	unsigned long		min_unmapped_pages;
+    /* 用于slab的未映射的页(可回收的页) 超过该值，进行slab的页面回收 */
 	unsigned long		min_slab_pages;
+    /* 每CPU的页面缓存,当分配单个页面的时候，从该缓存分配页面 */
 	struct per_cpu_pageset	*pageset[NR_CPUS];
 #else
 	struct per_cpu_pageset	pageset[NR_CPUS];
@@ -326,6 +336,7 @@ struct zone {
 	/* see spanned/present_pages for more description */
 	seqlock_t		span_seqlock;
 #endif
+    /* buddy list */
 	struct free_area	free_area[MAX_ORDER];
 
 #ifndef CONFIG_SPARSEMEM
@@ -337,14 +348,17 @@ struct zone {
 #endif /* CONFIG_SPARSEMEM */
 
 
+    /* 填充的未用字段，确保后面的字段在缓存行中是对齐的 */
 	ZONE_PADDING(_pad1_)
 
+    /* 用于页面回收机制 */
 	/* Fields commonly accessed by the page reclaim scanner */
 	spinlock_t		lru_lock;	
 	struct zone_lru {
 		struct list_head list;
 	} lru[NR_LRU_LISTS];
 
+    /* 页面回收的状态*/
 	struct zone_reclaim_stat reclaim_stat;
 
 	unsigned long		pages_scanned;	   /* since last reclaim */
