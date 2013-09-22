@@ -2581,6 +2581,7 @@ static int default_zonelist_order(void)
 	for_each_online_node(nid) {
 		for (zone_type = 0; zone_type < MAX_NR_ZONES; zone_type++) {
 			z = &NODE_DATA(nid)->node_zones[zone_type];
+      /* 该zone的页面数是否不为0 */
 			if (populated_zone(z)) {
 				if (zone_type < ZONE_NORMAL)
 					low_kmem_size += z->present_pages;

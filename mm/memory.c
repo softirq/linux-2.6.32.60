@@ -2968,6 +2968,7 @@ static int do_nonlinear_fault(struct mm_struct *mm, struct vm_area_struct *vma,
 }
 
 /*
+ * 缺页异常的校正:确认异常是在允许的地址触发的，内核需要将所需数据读取到物理内存
  * These routines also need to handle stuff like marking pages dirty
  * and/or accessed for architectures that don't do it in hardware (most
  * RISC architectures).  The early dirtying is also good on the i386.
@@ -2992,6 +2993,7 @@ static inline int handle_pte_fault(struct mm_struct *mm,
 		if (pte_none(entry)) {
 			if (vma->vm_ops) {
 				if (likely(vma->vm_ops->fault))
+          /* 按需分页 */
 					return do_linear_fault(mm, vma, address,
 						pte, pmd, flags, entry);
 			}

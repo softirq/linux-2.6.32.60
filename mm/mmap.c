@@ -1192,6 +1192,8 @@ munmap_back:
 		}
 		vma->vm_file = file;
 		get_file(file);
+    /* ext4 : ext4_file_mmap 
+     * ext3 : generic_file_mmap */
 		error = file->f_op->mmap(file, vma);
 		if (error)
 			goto unmap_and_free_vma;
@@ -1989,7 +1991,7 @@ static inline void verify_mm_writelocked(struct mm_struct *mm)
 
 /*
  *  this is really a simplified "do_mmap".  it only handles
- *  anonymous maps.  eventually we may be able to do some
+ *  anonymous maps for brk.  eventually we may be able to do some
  *  brk-specific accounting here.
  */
 unsigned long do_brk(unsigned long addr, unsigned long len)
