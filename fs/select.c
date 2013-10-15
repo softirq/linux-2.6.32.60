@@ -202,6 +202,7 @@ static int __pollwake(wait_queue_t *wait, unsigned mode, int sync, void *key)
 	return default_wake_function(&dummy_wait, mode, sync, key);
 }
 
+/* 唤醒等待队列头是中的所有应用进程 */
 static int pollwake(wait_queue_t *wait, unsigned mode, int sync, void *key)
 {
 	struct poll_table_entry *entry;

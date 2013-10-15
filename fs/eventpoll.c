@@ -535,6 +535,7 @@ static int ep_scan_ready_list(struct eventpoll *ep,
 
 	/*
 	 * Now call the callback function.
+   * sproc = ep_send_events_proc 就就绪队列中的事件存入到用户内存中
 	 */
 	error = (*sproc)(ep, &txlist, priv);
 
@@ -1061,6 +1062,7 @@ static int ep_insert(struct eventpoll *ep, struct epoll_event *event,
 {
 	int error, revents, pwake = 0;
 	unsigned long flags;
+  /* 每一个加入到epoll监听的句柄(也就是红黑树的一个节点)，都是包含一个epitem */
 	struct epitem *epi;
 	struct ep_pqueue epq;
 
@@ -1237,6 +1239,7 @@ static int ep_send_events_proc(struct eventpoll *ep, struct list_head *head,
 
 		list_del_init(&epi->rdllink);
 
+    /* 调用设备驱动的poll方法 : 返回当前文件的状态,得到设备事件的掩码*/
 		revents = epi->ffd.file->f_op->poll(epi->ffd.file, NULL) &
 			epi->event.events;
 
@@ -1256,6 +1259,7 @@ static int ep_send_events_proc(struct eventpoll *ep, struct list_head *head,
 			uevent++;
 			if (epi->event.events & EPOLLONESHOT)
 				epi->event.events &= EP_PRIVATE_BITS;
+      /* 如果epoll是水平触发，需要他当前的epitem实例添加回链表中，下次读取事件再上报 */
 			else if (!(epi->event.events & EPOLLET)) {
 				/*
 				 * If this file has been added with Level
@@ -1318,6 +1322,7 @@ retry:
         /*休眠 等待被ep_poll_callback函数唤醒*/
 		__add_wait_queue(&ep->wq, &wait);
 
+    /* 发生的阻塞行为 */
 		for (;;) {
 			/*
 			 * We don't want to sleep if the ep_poll_callback() sends us
@@ -1325,6 +1330,7 @@ retry:
 			 * to TASK_INTERRUPTIBLE before doing the checks.
 			 */
 			set_current_state(TASK_INTERRUPTIBLE);
+      /* 等待就绪队列不为空 */
 			if (!list_empty(&ep->rdllist) || !jtimeout)
 				break;
 			if (signal_pending(current)) {
@@ -1351,6 +1357,7 @@ retry:
 	 * more luck.
 	 */
 	if (!res && eavail &&
+      /* 如果有事件发生， 将发生出事件发送给用户空间 */
 	    !(res = ep_send_events(ep, events, maxevents)) && jtimeout)
 		goto retry;
 
@@ -1457,6 +1464,7 @@ static void clear_tfile_check_list(void)
 /*
  * Open an eventpoll file descriptor.
  */
+/* epoll_create */
 SYSCALL_DEFINE1(epoll_create1, int, flags)
 {
 	int error, fd;

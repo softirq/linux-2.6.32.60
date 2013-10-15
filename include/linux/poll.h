@@ -35,6 +35,7 @@ typedef struct poll_table_struct {
 	unsigned long key;
 } poll_table;
 
+/* 把当前进程添加到poll_table这个等待队列上 qproc = ep_ptable_queue_proc*/
 static inline void poll_wait(struct file * filp, wait_queue_head_t * wait_address, poll_table *p)
 {
 	if (p && wait_address)
@@ -49,6 +50,7 @@ static inline void init_poll_funcptr(poll_table *pt, poll_queue_proc qproc)
 
 struct poll_table_entry {
 	struct file *filp;
+  /* 等待特定fd对应硬件设备的事件,如POLLIN, POLLOUT, POLLERR*/
 	unsigned long key;
 	wait_queue_t wait;
 	wait_queue_head_t *wait_address;
@@ -56,6 +58,8 @@ struct poll_table_entry {
 
 /*
  * Structures and helpers for sys_poll/sys_poll
+ * 调用select/poll的应用进程都会存在一个该结构体
+ * 用于实现该进程中所有待检测的fd的轮询工作
  */
 struct poll_wqueues {
 	poll_table pt;
